@@ -1,0 +1,14 @@
+{
+  "name": "Blue Line Assistant",
+  "id": "blue-line-assistant",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["*"],
+    "reasoning": "Send accessibility scan results to web application API"
+  }
+}

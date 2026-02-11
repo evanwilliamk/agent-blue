@@ -1,0 +1,19 @@
+{
+  "name": "figma-plugin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js && nodemon --watch src --exec 'node build.js'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.123.0",
+    "@types/node": "^25.2.1",
+    "esbuild": "^0.27.3",
+    "typescript": "^5.9.3"
+  }
+}

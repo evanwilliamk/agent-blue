@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .container {
+      max-width: 360px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+      color: #333;
+    }
+
+    .description {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .button {
+      width: 100%;
+      padding: 12px 16px;
+      background: #18A0FB;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: background 0.2s;
+    }
+
+    .button:hover {
+      background: #0D8BE8;
+    }
+
+    .button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .button.secondary {
+      background: #fff;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+
+    .button.secondary:hover {
+      background: #f5f5f5;
+    }
+
+    .status {
+      padding: 12px;
+      background: #fff;
+      border-radius: 6px;
+      margin-top: 16px;
+      font-size: 13px;
+      border-left: 3px solid #18A0FB;
+      display: none;
+    }
+
+    .status.visible {
+      display: block;
+    }
+
+    .status.error {
+      border-left-color: #F24822;
+      background: #FFF5F5;
+    }
+
+    .status.success {
+      border-left-color: #0FA958;
+      background: #F0FDF4;
+    }
+
+    .progress {
+      margin-top: 16px;
+      padding: 12px;
+      background: #fff;
+      border-radius: 6px;
+      display: none;
+      border-left: 3px solid #18A0FB;
+    }
+
+    .progress.visible {
+      display: block;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: #18A0FB;
+      transition: width 0.3s;
+    }
+
+    .progress-log {
+      margin-top: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 12px;
+      color: #666;
+      background: #f8f8f8;
+      padding: 8px;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .progress-log-item {
+      padding: 4px 0;
+      line-height: 1.4;
+    }
+
+    .progress-log-item:not(:last-child) {
+      border-bottom: 1px solid #eee;
+    }
+
+    .config {
+      margin-top: 24px;
+      padding: 16px;
+      background: #fff;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+
+    .config h3 {
+      font-size: 14px;
+      margin: 0 0 12px 0;
+      color: #333;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .link {
+      color: #18A0FB;
+      text-decoration: none;
+      font-size: 13px;
+      display: inline-block;
+      margin-top: 8px;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .header-left {
+      flex: 1;
+    }
+
+    .reload-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: #fff;
+      border: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    .reload-btn:hover {
+      background: #f5f5f5;
+      border-color: #18A0FB;
+    }
+
+    .reload-btn svg {
+      transition: transform 0.3s;
+    }
+
+    .reload-btn:hover svg {
+      transform: rotate(90deg);
+    }
+
+    .reload-btn:active svg {
+      transform: rotate(180deg);
+    }
+
+    .stats {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .stat {
+      flex: 1;
+      padding: 8px;
+      background: #f8f8f8;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #666;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <h1>Blue Line Assistant</h1>
+      </div>
+      <button class="reload-btn" id="reload-btn" title="Reload Plugin">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+        </svg>
+      </button>
+    </div>
+
+    <p class="description">
+      Scan your Figma designs for accessibility issues including color contrast, text size, and touch targets.
+    </p>
+
+    <button class="button" id="scan-page">
+      📄 Scan Current Page
+    </button>
+
+    <button class="button" id="scan-file">
+      📁 Scan Entire File
+    </button>
+
+    <div class="progress" id="progress">
+      <div id="progress-text">Scanning...</div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%"></div>
+      </div>
+      <div class="progress-log" id="progress-log"></div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="config">
+      <h3>⚙️ Configuration</h3>
+      <input
+        type="text"
+        id="api-url"
+        placeholder="API URL (e.g., http://192.168.0.174:3000/api)"
+        value="http://192.168.0.174:3000/api"
+      />
+      <button class="button secondary" id="save-config">
+        Save Configuration
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // UI state
+    let isScanning = false;
+
+    // Elements
+    const scanPageBtn = document.getElementById('scan-page');
+    const scanFileBtn = document.getElementById('scan-file');
+    const reloadBtn = document.getElementById('reload-btn');
+    const statusDiv = document.getElementById('status');
+    const progressDiv = document.getElementById('progress');
+    const progressText = document.getElementById('progress-text');
+    const progressBarFill = document.getElementById('progress-bar-fill');
+    const progressLog = document.getElementById('progress-log');
+    const apiUrlInput = document.getElementById('api-url');
+    const saveConfigBtn = document.getElementById('save-config');
+
+    // Load saved API URL
+    window.addEventListener('load', () => {
+      const savedUrl = localStorage.getItem('apiUrl');
+      if (savedUrl) {
+        apiUrlInput.value = savedUrl;
+      }
+    });
+
+    // Reload plugin
+    reloadBtn.onclick = () => {
+      if (confirm('Reload plugin?\n\nThis will close the plugin. You\'ll need to reopen it from the Plugins menu to see updates.')) {
+        parent.postMessage({ pluginMessage: { type: 'reload-plugin' } }, '*');
+      }
+    };
+
+    // Save configuration
+    saveConfigBtn.onclick = () => {
+      const apiUrl = apiUrlInput.value.trim();
+      if (apiUrl) {
+        localStorage.setItem('apiUrl', apiUrl);
+        parent.postMessage({ pluginMessage: { type: 'configure-api', apiUrl } }, '*');
+        showStatus('Configuration saved', 'success');
+      }
+    };
+
+    // Scan current page
+    scanPageBtn.onclick = () => {
+      if (isScanning) return;
+      isScanning = true;
+      updateButtons(true);
+      hideStatus();
+      parent.postMessage({ pluginMessage: { type: 'scan-page' } }, '*');
+    };
+
+    // Scan entire file
+    scanFileBtn.onclick = () => {
+      if (isScanning) return;
+      isScanning = true;
+      updateButtons(true);
+      hideStatus();
+      showProgress('Scanning file...');
+      parent.postMessage({ pluginMessage: { type: 'scan-file' } }, '*');
+    };
+
+    // Handle messages from plugin code
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+
+      if (msg.type === 'scan-started') {
+        showProgress(msg.message || `Scanning ${msg.scope}...`);
+        clearProgressLog();
+        if (msg.message) addProgressLog(msg.message);
+      }
+
+      if (msg.type === 'scan-step') {
+        if (msg.message) addProgressLog(msg.message);
+      }
+
+      if (msg.type === 'scan-progress') {
+        const progress = (msg.current / msg.total) * 100;
+        updateProgress(progress, msg.message || `Scanning ${msg.pageName}... (${msg.current}/${msg.total})`);
+        if (msg.message) addProgressLog(msg.message);
+      }
+
+      if (msg.type === 'scan-complete') {
+        isScanning = false;
+        updateButtons(false);
+        hideProgress();
+        showStatus(
+          `✓ Scan complete! Found ${msg.issueCount} issue${msg.issueCount !== 1 ? 's' : ''}. Check your web dashboard.`,
+          'success'
+        );
+      }
+
+      if (msg.type === 'scan-error') {
+        isScanning = false;
+        updateButtons(false);
+        hideProgress();
+        showStatus(`✗ Error: ${msg.error}`, 'error');
+      }
+
+      if (msg.type === 'api-success') {
+        const link = `<a href="${msg.webAppUrl}" class="link" target="_blank">View in Dashboard →</a>`;
+        const statusEl = document.getElementById('status');
+        if (statusEl) {
+          statusEl.innerHTML += `<br>${link}`;
+        }
+      }
+
+      if (msg.type === 'config-saved') {
+        showStatus('✓ Configuration saved', 'success');
+      }
+    };
+
+    // Helper functions
+    function updateButtons(disabled) {
+      scanPageBtn.disabled = disabled;
+      scanFileBtn.disabled = disabled;
+    }
+
+    function showProgress(text) {
+      progressDiv.classList.add('visible');
+      progressText.textContent = text;
+      progressBarFill.style.width = '0%';
+    }
+
+    function updateProgress(percent, text) {
+      progressBarFill.style.width = `${percent}%`;
+      progressText.textContent = text;
+    }
+
+    function hideProgress() {
+      progressDiv.classList.remove('visible');
+    }
+
+    function showStatus(text, type = 'info') {
+      statusDiv.textContent = text;
+      statusDiv.className = 'status visible ' + type;
+    }
+
+    function hideStatus() {
+      statusDiv.classList.remove('visible');
+    }
+
+    function clearProgressLog() {
+      progressLog.innerHTML = '';
+    }
+
+    function addProgressLog(message) {
+      const logItem = document.createElement('div');
+      logItem.className = 'progress-log-item';
+      logItem.textContent = message;
+      progressLog.appendChild(logItem);
+      // Auto-scroll to bottom
+      progressLog.scrollTop = progressLog.scrollHeight;
+    }
+  </script>
+</body>
+</html>
