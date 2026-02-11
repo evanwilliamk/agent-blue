@@ -2,7 +2,7 @@
 
 // Configuration - Update this with your web app URL
 // Note: Figma plugins cannot access localhost, use your network IP instead
-const API_BASE_URL = 'http://192.168.0.174:3000/api';
+const API_BASE_URL = 'https://a11y-dashboard-seven.vercel.app/api';
 
 // Show UI
 figma.showUI(__html__, { width: 400, height: 500 });
