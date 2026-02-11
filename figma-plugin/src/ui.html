@@ -266,6 +266,10 @@
       Scan your Figma designs for accessibility issues including color contrast, text size, and touch targets.
     </p>
 
+    <button class="button" id="scan-selection">
+      🎯 Scan Selection
+    </button>
+
     <button class="button" id="scan-page">
       📄 Scan Current Page
     </button>
@@ -303,6 +307,7 @@
     let isScanning = false;
 
     // Elements
+    const scanSelectionBtn = document.getElementById('scan-selection');
     const scanPageBtn = document.getElementById('scan-page');
     const scanFileBtn = document.getElementById('scan-file');
     const reloadBtn = document.getElementById('reload-btn');
@@ -337,6 +342,16 @@
         parent.postMessage({ pluginMessage: { type: 'configure-api', apiUrl } }, '*');
         showStatus('Configuration saved', 'success');
       }
+    };
+
+    // Scan selection
+    scanSelectionBtn.onclick = () => {
+      if (isScanning) return;
+      isScanning = true;
+      updateButtons(true);
+      hideStatus();
+      showProgress('Scanning selection...');
+      parent.postMessage({ pluginMessage: { type: 'scan-selection' } }, '*');
     };
 
     // Scan current page

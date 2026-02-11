@@ -11,6 +11,8 @@ figma.showUI(__html__, { width: 400, height: 500 });
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'scan-page') {
     await scanCurrentPage();
+  } else if (msg.type === 'scan-selection') {
+    await scanSelection();
   } else if (msg.type === 'scan-file') {
     await scanEntireFile();
   } else if (msg.type === 'configure-api') {
@@ -95,6 +97,71 @@ async function scanCurrentPage() {
       type: 'scan-error',
       error: `Page scan failed: ${errorMessage}`,
       stack: errorStack,
+    });
+  }
+}
+
+// Scan selected frame/element
+async function scanSelection() {
+  console.log('scanSelection() called');
+
+  figma.ui.postMessage({
+    type: 'scan-started',
+    scope: 'selection',
+    message: '🔍 Starting scan of selection...'
+  });
+
+  try {
+    const selection = figma.currentPage.selection;
+
+    if (selection.length === 0) {
+      throw new Error('No selection. Please select a frame or element to scan.');
+    }
+
+    console.log('Selection:', selection.length, 'items');
+    const currentPage = figma.currentPage;
+    const allIssues: any[] = [];
+
+    figma.ui.postMessage({
+      type: 'scan-step',
+      message: `📄 Scanning ${selection.length} selected item${selection.length !== 1 ? 's' : ''}...`
+    });
+
+    for (const node of selection) {
+      console.log('Scanning node:', node.name, node.type);
+      await traverseNode(node, allIssues, currentPage);
+    }
+
+    console.log('Selection scan complete, found', allIssues.length, 'issues');
+
+    figma.ui.postMessage({
+      type: 'scan-step',
+      message: `✓ Found ${allIssues.length} issue${allIssues.length !== 1 ? 's' : ''} in selection`
+    });
+
+    figma.ui.postMessage({
+      type: 'scan-step',
+      message: '📤 Sending results to dashboard...'
+    });
+
+    // Send to API
+    try {
+      await sendScanToAPI('selection', [currentPage], allIssues);
+    } catch (apiError) {
+      console.error('sendScanToAPI failed:', apiError);
+      throw new Error(`API failed: ${apiError instanceof Error ? apiError.message : String(apiError)}`);
+    }
+
+    figma.ui.postMessage({
+      type: 'scan-complete',
+      scope: 'selection',
+      issueCount: allIssues.length,
+    });
+  } catch (error) {
+    console.error('Scan selection error:', error);
+    figma.ui.postMessage({
+      type: 'scan-error',
+      error: `Selection scan failed: ${error instanceof Error ? error.message : String(error)}`,
     });
   }
 }
