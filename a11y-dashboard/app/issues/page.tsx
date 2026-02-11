@@ -26,6 +26,7 @@ export default function IssuesPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
 
   // Filters
   const [statusFilter, setStatusFilter] = useState('all');
@@ -46,6 +47,9 @@ export default function IssuesPage() {
       if (severityFilter !== 'all') params.append('severity', severityFilter);
       if (categoryFilter !== 'all') params.append('category', categoryFilter);
 
+      // Request all issues (increase limit to 10000)
+      params.append('limit', '10000');
+
       const response = await fetch(`/api/issues?${params.toString()}`);
 
       if (!response.ok) {
@@ -54,6 +58,7 @@ export default function IssuesPage() {
 
       const data = await response.json();
       setIssues(data.issues || []);
+      setTotal(data.total || 0);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
