@@ -4,10 +4,10 @@ import { query } from '@/lib/db/client';
 // GET /api/issues/[issue_id] - Get issue details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { issue_id: string } }
+  { params }: { params: Promise<{ issue_id: string }> }
 ) {
   try {
-    const { issue_id } = params;
+    const { issue_id } = await params;
 
     // Get issue with related data
     const issueResult = await query(
@@ -74,10 +74,10 @@ export async function GET(
 // PATCH /api/issues/[issue_id] - Update issue
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { issue_id: string } }
+  { params }: { params: Promise<{ issue_id: string }> }
 ) {
   try {
-    const { issue_id } = params;
+    const { issue_id } = await params;
     const body = await request.json();
     const { status, assigned_to, severity, fix_recommendation } = body;
 
