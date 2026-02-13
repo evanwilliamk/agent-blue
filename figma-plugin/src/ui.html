@@ -266,6 +266,13 @@
       Scan your Figma designs for accessibility issues including color contrast, text size, and touch targets.
     </p>
 
+    <div style="margin-bottom: 12px;">
+      <label style="display: flex; align-items: center; font-size: 13px; color: #333; cursor: pointer;">
+        <input type="checkbox" id="show-annotations" style="margin-right: 8px;">
+        <span>🎨 Draw blue line annotations on issues</span>
+      </label>
+    </div>
+
     <button class="button" id="scan-selection">
       🎯 Scan Selection
     </button>
@@ -276,6 +283,10 @@
 
     <button class="button" id="scan-file">
       📁 Scan Entire File
+    </button>
+
+    <button class="button secondary" id="clear-annotations" style="margin-top: 8px;">
+      🧹 Clear Annotations
     </button>
 
     <div class="progress" id="progress">
@@ -310,6 +321,8 @@
     const scanSelectionBtn = document.getElementById('scan-selection');
     const scanPageBtn = document.getElementById('scan-page');
     const scanFileBtn = document.getElementById('scan-file');
+    const clearAnnotationsBtn = document.getElementById('clear-annotations');
+    const showAnnotationsCheckbox = document.getElementById('show-annotations');
     const reloadBtn = document.getElementById('reload-btn');
     const statusDiv = document.getElementById('status');
     const progressDiv = document.getElementById('progress');
@@ -351,7 +364,12 @@
       updateButtons(true);
       hideStatus();
       showProgress('Scanning selection...');
-      parent.postMessage({ pluginMessage: { type: 'scan-selection' } }, '*');
+      parent.postMessage({
+        pluginMessage: {
+          type: 'scan-selection',
+          showAnnotations: showAnnotationsCheckbox.checked
+        }
+      }, '*');
     };
 
     // Scan current page
@@ -360,7 +378,18 @@
       isScanning = true;
       updateButtons(true);
       hideStatus();
-      parent.postMessage({ pluginMessage: { type: 'scan-page' } }, '*');
+      parent.postMessage({
+        pluginMessage: {
+          type: 'scan-page',
+          showAnnotations: showAnnotationsCheckbox.checked
+        }
+      }, '*');
+    };
+
+    // Clear annotations
+    clearAnnotationsBtn.onclick = () => {
+      parent.postMessage({ pluginMessage: { type: 'clear-annotations' } }, '*');
+      showStatus('Annotations cleared', 'success');
     };
 
     // Scan entire file

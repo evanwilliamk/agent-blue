@@ -4,17 +4,22 @@
 // Note: Figma plugins cannot access localhost, use your network IP instead
 const API_BASE_URL = 'https://a11y-dashboard-seven.vercel.app/api';
 
+// Store for annotation frames
+const annotationFrames: FrameNode[] = [];
+
 // Show UI
 figma.showUI(__html__, { width: 400, height: 500 });
 
 // Listen for messages from UI
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'scan-page') {
-    await scanCurrentPage();
+    await scanCurrentPage(msg.showAnnotations);
   } else if (msg.type === 'scan-selection') {
-    await scanSelection();
+    await scanSelection(msg.showAnnotations);
   } else if (msg.type === 'scan-file') {
     await scanEntireFile();
+  } else if (msg.type === 'clear-annotations') {
+    clearAnnotations();
   } else if (msg.type === 'configure-api') {
     // Store API configuration
     await figma.clientStorage.setAsync('apiUrl', msg.apiUrl);
@@ -27,8 +32,8 @@ figma.ui.onmessage = async (msg) => {
 };
 
 // Scan current page
-async function scanCurrentPage() {
-  console.log('scanCurrentPage() called');
+async function scanCurrentPage(showAnnotations: boolean = false) {
+  console.log('scanCurrentPage() called', 'annotations:', showAnnotations);
 
   figma.ui.postMessage({
     type: 'scan-started',
@@ -60,6 +65,15 @@ async function scanCurrentPage() {
       type: 'scan-step',
       message: `✓ Found ${issues.length} issue${issues.length !== 1 ? 's' : ''} on this page`
     });
+
+    // Draw annotations if requested
+    if (showAnnotations && issues.length > 0) {
+      figma.ui.postMessage({
+        type: 'scan-step',
+        message: '🎨 Drawing blue line annotations...'
+      });
+      await drawAnnotations(issues);
+    }
 
     figma.ui.postMessage({
       type: 'scan-step',
@@ -102,8 +116,8 @@ async function scanCurrentPage() {
 }
 
 // Scan selected frame/element
-async function scanSelection() {
-  console.log('scanSelection() called');
+async function scanSelection(showAnnotations: boolean = false) {
+  console.log('scanSelection() called', 'annotations:', showAnnotations);
 
   figma.ui.postMessage({
     type: 'scan-started',
@@ -138,6 +152,15 @@ async function scanSelection() {
       type: 'scan-step',
       message: `✓ Found ${allIssues.length} issue${allIssues.length !== 1 ? 's' : ''} in selection`
     });
+
+    // Draw annotations if requested
+    if (showAnnotations && allIssues.length > 0) {
+      figma.ui.postMessage({
+        type: 'scan-step',
+        message: '🎨 Drawing blue line annotations...'
+      });
+      await drawAnnotations(allIssues);
+    }
 
     figma.ui.postMessage({
       type: 'scan-step',
@@ -529,4 +552,122 @@ async function sendScanToAPI(scanType: string, pages: PageNode[], issues: any[])
     }
     throw new Error(`API error: ${JSON.stringify(error)}`);
   }
+}
+
+// Draw blue line annotations on elements with issues
+async function drawAnnotations(issues: any[]) {
+  console.log('Drawing annotations for', issues.length, 'issues');
+
+  // Clear existing annotations first
+  clearAnnotations();
+
+  const currentPage = figma.currentPage;
+  let annotationCount = 0;
+
+  for (const issue of issues) {
+    try {
+      // Find the node by ID
+      const node = figma.getNodeById(issue.element_id) as SceneNode;
+
+      if (!node || !('x' in node) || !('width' in node)) {
+        console.log('Could not find or access node:', issue.element_id);
+        continue;
+      }
+
+      // Create annotation frame
+      const annotation = figma.createFrame();
+      annotation.name = `A11y Issue: ${issue.category}`;
+      annotation.x = node.x;
+      annotation.y = node.y;
+      annotation.resize(node.width, node.height);
+
+      // Style based on severity
+      const colors = {
+        critical: { r: 0.96, g: 0.26, b: 0.21 }, // Red
+        high: { r: 1, g: 0.58, b: 0 }, // Orange
+        medium: { r: 1, g: 0.8, b: 0 }, // Yellow
+        low: { r: 0.2, g: 0.6, b: 1 }  // Blue
+      };
+
+      const color = colors[issue.severity as keyof typeof colors] || colors.low;
+
+      // Blue line border (Stark-style)
+      annotation.strokes = [{
+        type: 'SOLID',
+        color: color,
+        opacity: 1
+      }];
+      annotation.strokeWeight = 3;
+      annotation.dashPattern = []; // Solid line
+      annotation.fills = [{
+        type: 'SOLID',
+        color: color,
+        opacity: 0.1  // Light fill
+      }];
+
+      // Add to page
+      currentPage.appendChild(annotation);
+
+      // Add text label
+      const label = figma.createText();
+      await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+      label.characters = `${issue.severity.toUpperCase()}: ${issue.description.substring(0, 50)}...`;
+      label.fontSize = 12;
+      label.fills = [{
+        type: 'SOLID',
+        color: { r: 1, g: 1, b: 1 }
+      }];
+
+      // Background for label
+      const labelBg = figma.createRectangle();
+      labelBg.resize(label.width + 16, label.height + 8);
+      labelBg.fills = [{
+        type: 'SOLID',
+        color: color,
+        opacity: 0.95
+      }];
+      labelBg.x = annotation.x;
+      labelBg.y = annotation.y - labelBg.height - 4;
+
+      label.x = labelBg.x + 8;
+      label.y = labelBg.y + 4;
+
+      currentPage.appendChild(labelBg);
+      currentPage.appendChild(label);
+
+      // Store for cleanup
+      annotationFrames.push(annotation, labelBg as any, label as any);
+      annotationCount++;
+
+    } catch (error) {
+      console.error('Error drawing annotation for issue:', issue.element_id, error);
+    }
+  }
+
+  console.log(`✓ Drew ${annotationCount} annotations`);
+
+  figma.ui.postMessage({
+    type: 'scan-step',
+    message: `✓ Drew ${annotationCount} blue line annotation${annotationCount !== 1 ? 's' : ''}`
+  });
+}
+
+// Clear all annotations
+function clearAnnotations() {
+  console.log('Clearing', annotationFrames.length, 'annotations');
+
+  for (const frame of annotationFrames) {
+    try {
+      frame.remove();
+    } catch (error) {
+      console.log('Could not remove annotation:', error);
+    }
+  }
+
+  annotationFrames.length = 0; // Clear array
+
+  figma.ui.postMessage({
+    type: 'scan-step',
+    message: '🧹 Cleared annotations'
+  });
 }
