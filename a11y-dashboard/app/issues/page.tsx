@@ -32,6 +32,7 @@ export default function IssuesPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [principleFilter, setPrincipleFilter] = useState('all');
 
   // Fetch issues
   useEffect(() => {
@@ -117,6 +118,26 @@ export default function IssuesPage() {
     }
   };
 
+  // WCAG Principle mapping
+  const getWCAGPrinciple = (criteria: string) => {
+    if (!criteria) return 'Unknown';
+    const num = parseFloat(criteria);
+    if (num >= 1.0 && num < 2.0) return 'Perceivable';
+    if (num >= 2.0 && num < 3.0) return 'Operable';
+    if (num >= 3.0 && num < 4.0) return 'Understandable';
+    if (num >= 4.0 && num < 5.0) return 'Robust';
+    return 'Unknown';
+  };
+
+  // Group issues by WCAG principle
+  const issuesByPrinciple = {
+    Perceivable: issues.filter(i => getWCAGPrinciple(i.wcag_criteria) === 'Perceivable'),
+    Operable: issues.filter(i => getWCAGPrinciple(i.wcag_criteria) === 'Operable'),
+    Understandable: issues.filter(i => getWCAGPrinciple(i.wcag_criteria) === 'Understandable'),
+    Robust: issues.filter(i => getWCAGPrinciple(i.wcag_criteria) === 'Robust'),
+    Unknown: issues.filter(i => getWCAGPrinciple(i.wcag_criteria) === 'Unknown'),
+  };
+
   const stats = {
     total: issues.length,
     critical: issues.filter(i => i.severity === 'critical').length,
@@ -198,10 +219,37 @@ export default function IssuesPage() {
           </div>
         </div>
 
+        {/* WCAG Principles */}
+        <div className="bg-white rounded-lg shadow-sm border-2 border-gray-200 p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900">📋 Issues by WCAG Principle</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-purple-50 rounded-lg p-4 border-2 border-purple-200">
+              <div className="text-2xl font-bold text-purple-600">{issuesByPrinciple.Perceivable.length}</div>
+              <div className="text-sm text-gray-600">1. Perceivable</div>
+              <div className="text-xs text-gray-500 mt-1">Content must be perceivable</div>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+              <div className="text-2xl font-bold text-blue-600">{issuesByPrinciple.Operable.length}</div>
+              <div className="text-sm text-gray-600">2. Operable</div>
+              <div className="text-xs text-gray-500 mt-1">UI must be operable</div>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4 border-2 border-green-200">
+              <div className="text-2xl font-bold text-green-600">{issuesByPrinciple.Understandable.length}</div>
+              <div className="text-sm text-gray-600">3. Understandable</div>
+              <div className="text-xs text-gray-500 mt-1">Content must be understandable</div>
+            </div>
+            <div className="bg-indigo-50 rounded-lg p-4 border-2 border-indigo-200">
+              <div className="text-2xl font-bold text-indigo-600">{issuesByPrinciple.Robust.length}</div>
+              <div className="text-sm text-gray-600">4. Robust</div>
+              <div className="text-xs text-gray-500 mt-1">Compatible with tech</div>
+            </div>
+          </div>
+        </div>
+
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm border-2 border-gray-200 p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4 text-gray-900">Filters</h2>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-4 gap-4">
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
                 Status
@@ -257,6 +305,24 @@ export default function IssuesPage() {
                 <option value="semantics">Semantics</option>
               </select>
             </div>
+
+            <div>
+              <label htmlFor="principle" className="block text-sm font-medium text-gray-700 mb-2">
+                WCAG Principle
+              </label>
+              <select
+                id="principle"
+                value={principleFilter}
+                onChange={(e) => setPrincipleFilter(e.target.value)}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Principles</option>
+                <option value="Perceivable">1. Perceivable</option>
+                <option value="Operable">2. Operable</option>
+                <option value="Understandable">3. Understandable</option>
+                <option value="Robust">4. Robust</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -288,7 +354,9 @@ export default function IssuesPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {issues.map((issue) => (
+            {issues
+              .filter(i => principleFilter === 'all' || getWCAGPrinciple(i.wcag_criteria) === principleFilter)
+              .map((issue) => (
               <Link
                 key={issue.id}
                 href={`/issues/${issue.id}`}

@@ -54,6 +54,8 @@ export default function IssueDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [addingComment, setAddingComment] = useState(false);
 
   useEffect(() => {
     fetchIssueDetail();
@@ -96,6 +98,33 @@ export default function IssueDetailPage() {
       alert('Error updating status: ' + (err instanceof Error ? err.message : 'Unknown error'));
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const addComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      setAddingComment(true);
+      const response = await fetch(`/api/issues/${issue_id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: newComment,
+          user_name: 'Anonymous' // In a real app, this would come from auth
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add comment');
+      }
+
+      setNewComment('');
+      await fetchIssueDetail(); // Refresh to show new comment
+    } catch (err) {
+      alert('Error adding comment: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setAddingComment(false);
     }
   };
 
@@ -255,9 +284,9 @@ export default function IssueDetailPage() {
                 Comments ({comments.length})
               </h2>
               {comments.length === 0 ? (
-                <p className="text-gray-500 text-sm">No comments yet</p>
+                <p className="text-gray-500 text-sm mb-4">No comments yet</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 mb-4">
                   {comments.map((comment) => (
                     <div key={comment.id} className="border-l-4 border-blue-200 pl-4">
                       <div className="flex items-center justify-between mb-1">
@@ -271,6 +300,25 @@ export default function IssueDetailPage() {
                   ))}
                 </div>
               )}
+
+              {/* Add Comment Form */}
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">💬 Add Comment</h3>
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Add your comment or annotation..."
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  rows={3}
+                />
+                <button
+                  onClick={addComment}
+                  disabled={addingComment || !newComment.trim()}
+                  className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                >
+                  {addingComment ? 'Adding...' : 'Add Comment'}
+                </button>
+              </div>
             </div>
 
             {/* Annotations */}
