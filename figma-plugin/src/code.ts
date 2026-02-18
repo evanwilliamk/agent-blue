@@ -17,7 +17,7 @@ figma.ui.onmessage = async (msg) => {
   } else if (msg.type === 'scan-selection') {
     await scanSelection(msg.showAnnotations);
   } else if (msg.type === 'scan-file') {
-    await scanEntireFile();
+    await scanEntireFile(msg.showAnnotations);
   } else if (msg.type === 'clear-annotations') {
     clearAnnotations();
   } else if (msg.type === 'configure-api') {
@@ -190,7 +190,7 @@ async function scanSelection(showAnnotations: boolean = false) {
 }
 
 // Scan entire file
-async function scanEntireFile() {
+async function scanEntireFile(showAnnotations: boolean = false) {
   figma.ui.postMessage({
     type: 'scan-started',
     scope: 'file',
@@ -238,6 +238,10 @@ async function scanEntireFile() {
 
     // Send to API
     await sendScanToAPI('full_file', pages as PageNode[], allIssues);
+
+    if (showAnnotations && allIssues.length > 0) {
+      await drawAnnotations(allIssues);
+    }
 
     figma.ui.postMessage({
       type: 'scan-complete',

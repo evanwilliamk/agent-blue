@@ -399,7 +399,7 @@
       updateButtons(true);
       hideStatus();
       showProgress('Scanning file...');
-      parent.postMessage({ pluginMessage: { type: 'scan-file' } }, '*');
+      parent.postMessage({ pluginMessage: { type: 'scan-file', showAnnotations: showAnnotationsCheckbox.checked } }, '*');
     };
 
     // Handle messages from plugin code
@@ -455,6 +455,7 @@
 
     // Helper functions
     function updateButtons(disabled) {
+      scanSelectionBtn.disabled = disabled;
       scanPageBtn.disabled = disabled;
       scanFileBtn.disabled = disabled;
     }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
-import { memoryIssues, isUsingFallback, enableFallback } from '@/lib/memory-storage';
+import { memoryIssues, isUsingFallback, enableFallback, getCommentsForIssue } from '@/lib/memory-storage';
 
 // GET /api/issues/[issue_id] - Get issue details
 export async function GET(
@@ -95,9 +95,11 @@ function handleFallbackGET(issue_id: string) {
     );
   }
 
+  const comments = getCommentsForIssue(parseInt(issue_id));
+
   return NextResponse.json({
     issue,
-    comments: [],
+    comments,
     annotations: [],
   });
 }

@@ -37,7 +37,7 @@ export default function IssuesPage() {
   // Fetch issues
   useEffect(() => {
     fetchIssues();
-  }, [statusFilter, severityFilter, categoryFilter]);
+  }, [statusFilter, severityFilter, categoryFilter, principleFilter]);
 
   const fetchIssues = async () => {
     try {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { memoryIssues } from '@/lib/memory-storage';
+import { memoryIssues, addComment, getCommentsForIssue } from '@/lib/memory-storage';
 
 // POST /api/issues/[issue_id]/comments - Add comment to issue
 export async function POST(
@@ -18,8 +18,6 @@ export async function POST(
       );
     }
 
-    // For in-memory mode, just return success
-    // In a real app with database, you would insert into comments table
     const comment = {
       id: Date.now().toString(),
       issue_id: parseInt(issue_id),
@@ -28,6 +26,8 @@ export async function POST(
       created_at: new Date().toISOString()
     };
 
+    // Persist to in-memory store so it survives page refreshes within the session
+    addComment(comment);
     console.log('✓ Comment added (in-memory mode):', comment);
 
     return NextResponse.json({
